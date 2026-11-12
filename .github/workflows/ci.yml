@@ -1,0 +1,32 @@
+name: CI
+on: [push, pull_request]
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npm run typecheck
+      - run: npm test
+      - run: npm run build
+      - run: node scripts/smoke-production.mjs
+      - run: npx playwright install --with-deps chromium webkit
+      - run: npm run test:web
+      - uses: actions/upload-artifact@v4
+        if: failure()
+        with:
+          name: browser-test-results
+          path: test-results/
+  ios:
+    runs-on: macos-15
+    steps:
+      - uses: actions/checkout@v4
+      - name: Run native connection and protocol tests
+        shell: bash
+        run: |
+          device_id=$(xcrun simctl list devices available -j | jq -r '[.devices[][] | select(.name | startswith("iPhone"))][0].udid')
+          xcodebuild -project apps/ios/Flashify.xcodeproj -scheme Flashify -destination "platform=iOS Simulator,id=$device_id" CODE_SIGNING_ALLOWED=NO test

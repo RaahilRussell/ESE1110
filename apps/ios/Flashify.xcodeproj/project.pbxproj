@@ -7,27 +7,81 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		5BDD5ECC2FBAA4524EC8669B /* ConnectionTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 82248162F8F126C053F421C9 /* ConnectionTests.swift */; };
 		6AA04B6D9A8044B9237570ED /* FlashifyApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 400C4EE7F46C55908D0B755A /* FlashifyApp.swift */; };
+		8389EBBA5BB1BF26A01C83B9 /* Transport.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6BB80DB76A547F41683A9A04 /* Transport.swift */; };
+		9157FC7C1224BA06505E45B4 /* server-state.json in Resources */ = {isa = PBXBuildFile; fileRef = DF72F84ECD5596FA331828CA /* server-state.json */; };
+		95131FBE8AAA9999A13FA879 /* Models.swift in Sources */ = {isa = PBXBuildFile; fileRef = 59C85FDE8A8BBD88DCDA972C /* Models.swift */; };
+		C9D116E2C8B6B110F30F000F /* ConnectionStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9BC9DBE15DD653F626AA38CA /* ConnectionStore.swift */; };
+		DF5F543DC3BABC13D0CA7D10 /* Discovery.swift in Sources */ = {isa = PBXBuildFile; fileRef = F764C86C0BB9E3C2098A04E5 /* Discovery.swift */; };
 /* End PBXBuildFile section */
+
+/* Begin PBXContainerItemProxy section */
+		993F3E064D427FA7E8CB5CBD /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 1B2314FEE0D77F1EDE66EE1F /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 17FFC2CB6870EB8A64EA02C2;
+			remoteInfo = Flashify;
+		};
+/* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
 		400C4EE7F46C55908D0B755A /* FlashifyApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FlashifyApp.swift; sourceTree = "<group>"; };
 		41D7F25D359881374214B716 /* Flashify.app */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.application; path = Flashify.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		59C85FDE8A8BBD88DCDA972C /* Models.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Models.swift; sourceTree = "<group>"; };
+		6BB80DB76A547F41683A9A04 /* Transport.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Transport.swift; sourceTree = "<group>"; };
+		7472210F80821E437BD9E51A /* FlashifyTests.xctest */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.cfbundle; path = FlashifyTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		82248162F8F126C053F421C9 /* ConnectionTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ConnectionTests.swift; sourceTree = "<group>"; };
+		9BC9DBE15DD653F626AA38CA /* ConnectionStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ConnectionStore.swift; sourceTree = "<group>"; };
+		DF72F84ECD5596FA331828CA /* server-state.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = "server-state.json"; sourceTree = "<group>"; };
+		F764C86C0BB9E3C2098A04E5 /* Discovery.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Discovery.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXGroup section */
+		17970E4244A4FE36AABCF99E /* Fixtures */ = {
+			isa = PBXGroup;
+			children = (
+				DF72F84ECD5596FA331828CA /* server-state.json */,
+			);
+			path = Fixtures;
+			sourceTree = "<group>";
+		};
 		189094BAC49C5A80514D48B5 = {
 			isa = PBXGroup;
 			children = (
 				400C4EE7F46C55908D0B755A /* FlashifyApp.swift */,
+				1EB5C8EA9B4F346F8352E0B6 /* Sources */,
+				2B67CB6B97EBC1E3356D7C04 /* Tests */,
 				6F060DF0BC655357953C4CDF /* Products */,
 			);
+			sourceTree = "<group>";
+		};
+		1EB5C8EA9B4F346F8352E0B6 /* Sources */ = {
+			isa = PBXGroup;
+			children = (
+				9BC9DBE15DD653F626AA38CA /* ConnectionStore.swift */,
+				F764C86C0BB9E3C2098A04E5 /* Discovery.swift */,
+				59C85FDE8A8BBD88DCDA972C /* Models.swift */,
+				6BB80DB76A547F41683A9A04 /* Transport.swift */,
+			);
+			path = Sources;
+			sourceTree = "<group>";
+		};
+		2B67CB6B97EBC1E3356D7C04 /* Tests */ = {
+			isa = PBXGroup;
+			children = (
+				82248162F8F126C053F421C9 /* ConnectionTests.swift */,
+				17970E4244A4FE36AABCF99E /* Fixtures */,
+			);
+			path = Tests;
 			sourceTree = "<group>";
 		};
 		6F060DF0BC655357953C4CDF /* Products */ = {
 			isa = PBXGroup;
 			children = (
 				41D7F25D359881374214B716 /* Flashify.app */,
+				7472210F80821E437BD9E51A /* FlashifyTests.xctest */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -51,6 +105,25 @@
 			productName = Flashify;
 			productReference = 41D7F25D359881374214B716 /* Flashify.app */;
 			productType = "com.apple.product-type.application";
+		};
+		FC889E7B4276F7F465571367 /* FlashifyTests */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 02A54D3EE15EFBE467D15521 /* Build configuration list for PBXNativeTarget "FlashifyTests" */;
+			buildPhases = (
+				45F42FE8A084B374AEA63483 /* Sources */,
+				A49353F4560D251502EB471E /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				14967427F8FD14909C6BD678 /* PBXTargetDependency */,
+			);
+			name = FlashifyTests;
+			packageProductDependencies = (
+			);
+			productName = FlashifyTests;
+			productReference = 7472210F80821E437BD9E51A /* FlashifyTests.xctest */;
+			productType = "com.apple.product-type.bundle.unit-test";
 		};
 /* End PBXNativeTarget section */
 
@@ -78,20 +151,52 @@
 			projectRoot = "";
 			targets = (
 				17FFC2CB6870EB8A64EA02C2 /* Flashify */,
+				FC889E7B4276F7F465571367 /* FlashifyTests */,
 			);
 		};
 /* End PBXProject section */
 
+/* Begin PBXResourcesBuildPhase section */
+		A49353F4560D251502EB471E /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				9157FC7C1224BA06505E45B4 /* server-state.json in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXResourcesBuildPhase section */
+
 /* Begin PBXSourcesBuildPhase section */
+		45F42FE8A084B374AEA63483 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				5BDD5ECC2FBAA4524EC8669B /* ConnectionTests.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		E2AE9B818280D6C1964B08BC /* Sources */ = {
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				C9D116E2C8B6B110F30F000F /* ConnectionStore.swift in Sources */,
+				DF5F543DC3BABC13D0CA7D10 /* Discovery.swift in Sources */,
 				6AA04B6D9A8044B9237570ED /* FlashifyApp.swift in Sources */,
+				95131FBE8AAA9999A13FA879 /* Models.swift in Sources */,
+				8389EBBA5BB1BF26A01C83B9 /* Transport.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXSourcesBuildPhase section */
+
+/* Begin PBXTargetDependency section */
+		14967427F8FD14909C6BD678 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 17FFC2CB6870EB8A64EA02C2 /* Flashify */;
+			targetProxy = 993F3E064D427FA7E8CB5CBD /* PBXContainerItemProxy */;
+		};
+/* End PBXTargetDependency section */
 
 /* Begin XCBuildConfiguration section */
 		3C23AB4A120284608A00660A /* Release */ = {
@@ -166,6 +271,24 @@
 				SDKROOT = iphoneos;
 				SWIFT_VERSION = 5.0;
 				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Debug;
+		};
+		5884D84A894C0811C8D34400 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				GENERATE_INFOPLIST_FILE = YES;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@loader_path/Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = com.raahil.FlashifyTests;
+				SDKROOT = iphoneos;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/Flashify.app/Flashify";
 			};
 			name = Debug;
 		};
@@ -251,9 +374,36 @@
 			};
 			name = Release;
 		};
+		F64CC269C1AF3B1757FB471F /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				GENERATE_INFOPLIST_FILE = YES;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@loader_path/Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = com.raahil.FlashifyTests;
+				SDKROOT = iphoneos;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/Flashify.app/Flashify";
+			};
+			name = Release;
+		};
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
+		02A54D3EE15EFBE467D15521 /* Build configuration list for PBXNativeTarget "FlashifyTests" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				5884D84A894C0811C8D34400 /* Debug */,
+				F64CC269C1AF3B1757FB471F /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
 		197084F8D0385AEF5032C4DF /* Build configuration list for PBXNativeTarget "Flashify" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (

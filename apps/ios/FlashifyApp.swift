@@ -1,28 +1,204 @@
 import SwiftUI
 
-struct FlashifySnapshot: Codable { var revision: Int; var mode: String; var blackout: Bool; var master: Double; var activeSceneId: String; var music: MusicState }
-struct MusicState: Codable { var running: Bool; var rms: Double; var bass: Double; var onset: Bool }
-struct ServerEnvelope: Codable { var type: String; var revision: Int?; var snapshot: FlashifySnapshot?; var id: String?; var ok: Bool? }
-
-@MainActor final class ConnectionStore: ObservableObject {
-    @Published var snapshot = FlashifySnapshot(revision: 1, mode: "manual", blackout: false, master: 0.82, activeSceneId: "house", music: MusicState(running: false, rms: 0, bass: 0, onset: false))
-    @Published var connected = false; @Published var reconnecting = false; let roomName = "Detkin Lab"
-    private var task: URLSessionWebSocketTask?; private var baseURL = URL(string: "http://localhost:4173")!
-    func connect(to url: URL? = nil) { if let url { baseURL = url }; let wsURL = URL(string: baseURL.absoluteString.replacingOccurrences(of: "http", with: "ws") + "/ws")!; task = URLSession.shared.webSocketTask(with: wsURL); task?.resume(); connected = true; reconnecting = false; receive(); send(type: "hello") }
-    private func receive() { task?.receive { [weak self] result in DispatchQueue.main.async { guard let self else { return }; if case .success(.string(let text)) = result, let data = text.data(using: .utf8), let envelope = try? JSONDecoder().decode(ServerEnvelope.self, from: data), let snapshot = envelope.snapshot { self.snapshot = snapshot }; if case .failure = result { self.connected = false; self.reconnecting = true }; self.receive() } } }
-    func send(type: String, body: [String: Any] = [:]) { guard let task else { return }; var payload: [String: Any] = ["type": type, "id": UUID().uuidString]; body.forEach { payload[$0.key] = $0.value }; guard let data = try? JSONSerialization.data(withJSONObject: payload), let text = String(data: data, encoding: .utf8) else { return }; task.send(.string(text)) { _ in } }
-    func activate(scene: String, fade: Int) { send(type: "scene.activate", body: ["sceneId": scene, "fadeMs": fade * 1000, "groupIds": [], "takeover": false]) }
-    func setBlackout(_ on: Bool) { send(type: "blackout.set", body: ["on": on]) }; func setMaster(_ value: Double) { send(type: "master.set", body: ["value": value]) }; func setMusic(_ on: Bool) { send(type: on ? "music.start" : "music.stop") }
+@main struct FlashifyApp: App {
+    @StateObject private var store = ConnectionStore()
+    var body: some Scene { WindowGroup { RootView().environmentObject(store) } }
 }
-
-@main struct FlashifyApp: App { @StateObject private var store = ConnectionStore(); var body: some Scene { WindowGroup { RootView().environmentObject(store).task { store.connect() } } } }
-struct RootView: View { @EnvironmentObject var store: ConnectionStore; @State private var tab = 0; var body: some View { VStack(spacing: 0) { StatusBar(); Group { if tab == 0 { HomeView() } else if tab == 1 { DesignView() } else if tab == 2 { ShowView() } else { MusicView() } }; HStack { TabButton(title: "Home", icon: "house", index: 0, selection: $tab); TabButton(title: "Design", icon: "lightbulb", index: 1, selection: $tab); TabButton(title: "Show", icon: "play.rectangle", index: 2, selection: $tab); TabButton(title: "Music", icon: "waveform", index: 3, selection: $tab) }.padding(.top, 8); BlackoutBar() } } }
-struct TabButton: View { let title: String; let icon: String; let index: Int; @Binding var selection: Int; var body: some View { Button { selection = index } label: { Label(title, systemImage: icon).font(.caption).frame(maxWidth: .infinity) }.tint(selection == index ? .orange : .secondary) } }
-struct StatusBar: View { @EnvironmentObject var store: ConnectionStore; var body: some View { HStack { Circle().fill(store.connected ? .green : .orange).frame(width: 8, height: 8); Text(store.reconnecting ? "Reconnecting…" : "Connected · \(store.roomName)").font(.caption.weight(.semibold)); Spacer(); Text(store.snapshot.mode.capitalized).font(.caption.monospaced()).foregroundStyle(.secondary) }.padding(.horizontal).padding(.vertical, 10).background(.ultraThinMaterial) } }
-struct BlackoutBar: View { @EnvironmentObject var store: ConnectionStore; var body: some View { Button { store.setBlackout(!store.snapshot.blackout) } label: { Label(store.snapshot.blackout ? "Release blackout" : "Blackout", systemImage: "xmark.octagon.fill").frame(maxWidth: .infinity).padding(.vertical, 12) }.tint(store.snapshot.blackout ? .orange : .red).buttonStyle(.borderedProminent).padding(.horizontal).padding(.bottom, 6) } }
-
-struct HomeView: View { @EnvironmentObject var store: ConnectionStore; @State private var fade = 3; let scenes = [("Warm", "house"), ("Focus", "focus"), ("Ambient", "ambient"), ("Party", "party"), ("Dramatic", "dramatic"), ("Presentation", "presentation")]; var body: some View { ScrollView { VStack(alignment: .leading, spacing: 22) { Text("Good evening.").font(.largeTitle.bold()); Text("Choose a look. Flashify handles the timing.").foregroundStyle(.secondary); HStack { Text("Grand master").font(.headline); Spacer(); Text("\(Int(store.snapshot.master * 100))%").monospaced() }; Slider(value: Binding(get: { store.snapshot.master }, set: { store.setMaster($0) })); Picker("Fade time", selection: $fade) { Text("Instant").tag(0); Text("1 sec").tag(1); Text("3 sec").tag(3); Text("5 sec").tag(5) }.pickerStyle(.segmented); LazyVGrid(columns: [GridItem(.flexible()), GridItem(.flexible())], spacing: 12) { ForEach(scenes, id: \.1) { scene in Button { store.activate(scene: scene.1, fade: fade) } label: { VStack(alignment: .leading, spacing: 12) { Circle().fill(.orange).frame(width: 36, height: 36); Text(scene.0).font(.headline); Text(store.snapshot.activeSceneId == scene.1 ? "Active" : "Tap to activate").font(.caption).foregroundStyle(.secondary) }.frame(maxWidth: .infinity, alignment: .leading).padding().background(.regularMaterial, in: RoundedRectangle(cornerRadius: 16)) } } } }.padding() } } }
-struct DesignView: View { var body: some View { ScrollView { VStack(alignment: .leading, spacing: 18) { Text("Design").font(.largeTitle.bold()); Text("Select a light or group to edit the shared controls.").foregroundStyle(.secondary); RoomMap(); Text("Selected lights").font(.headline); Slider(value: .constant(0.8)); Button("Save as scene") {}.buttonStyle(.borderedProminent) }.padding() } } }
-struct RoomMap: View { var body: some View { ZStack { RoundedRectangle(cornerRadius: 20).fill(Color.black.opacity(0.86)); Text("STAGE").font(.caption.monospaced()).foregroundStyle(.white.opacity(0.35)); Circle().fill(.orange).frame(width: 30).offset(x: -70, y: -35); Circle().fill(.blue).frame(width: 30).offset(x: 70, y: -10); Circle().fill(.mint).frame(width: 30).offset(y: 45) }.frame(height: 220) } }
-struct ShowView: View { @EnvironmentObject var store: ConnectionStore; @State private var cue = 1; var body: some View { VStack(alignment: .leading, spacing: 22) { Text("Show run").font(.largeTitle.bold()); Text("Evening Workshop").font(.headline); ForEach(1...4, id: \.self) { n in HStack { Text("0\(n)").monospaced().foregroundStyle(n == cue ? .orange : .secondary); Text(["House", "Warm welcome", "Workshop", "Black box"][n - 1]).font(.headline); Spacer(); Text("\([3, 5, 8, 3][n - 1]) sec").font(.caption.monospaced()).foregroundStyle(.secondary) } }; Spacer(); HStack { Button("Back") { cue = max(1, cue - 1); store.send(type: "show.back") }.buttonStyle(.bordered); Button("GO") { cue = min(4, cue + 1); store.send(type: "show.go") }.font(.title.bold()).frame(maxWidth: .infinity).padding(.vertical, 24).buttonStyle(.borderedProminent); Button("Stop") { store.send(type: "show.stop") }.buttonStyle(.bordered) } }.padding() } }
-struct MusicView: View { @EnvironmentObject var store: ConnectionStore; var body: some View { ZStack { Color.black.ignoresSafeArea(); VStack(alignment: .leading, spacing: 22) { Text("Music").font(.largeTitle.bold()).foregroundStyle(.white); Text("Pulse").font(.headline).foregroundStyle(.white.opacity(0.7)); HStack(alignment: .bottom, spacing: 5) { ForEach(0..<24, id: \.self) { i in RoundedRectangle(cornerRadius: 4).fill(i < Int(store.snapshot.music.rms * 24) ? .orange : .white.opacity(0.15)).frame(width: 8, height: CGFloat(20 + (i % 5) * 12)) } }.frame(maxWidth: .infinity, minHeight: 120, alignment: .bottom); Text(store.snapshot.music.running ? "Hearing sound" : "Music stopped").foregroundStyle(store.snapshot.music.running ? .green : .white.opacity(0.6)); Button(store.snapshot.music.running ? "Stop pulse" : "Start pulse") { store.setMusic(!store.snapshot.music.running) }.buttonStyle(.borderedProminent).tint(.orange); Spacer() }.padding() } } }
+struct RootView: View {
+    @EnvironmentObject var store: ConnectionStore
+    @State private var connectionSheet = false
+    var body: some View {
+        VStack(spacing: 0) {
+            HStack {
+                Circle().fill(store.connected ? .green : .orange).frame(width: 8, height: 8)
+                Text(store.connected ? (store.snapshot?.controller.roomName ?? "Controller") : store.reconnecting ? "Reconnecting…" : "Disconnected").font(.caption)
+                Spacer()
+                Button("Connection") { connectionSheet = true }
+            }.padding()
+            if let error = store.error { Text(error).font(.caption).foregroundStyle(.red).padding(.horizontal).accessibilityIdentifier("connectionError") }
+            if store.connected && store.role != "operator" {
+                Button("Acquire operator control") { Task { await store.acquireControl() } }.buttonStyle(.bordered).padding(8)
+            }
+            if !store.pending.isEmpty { Text("Waiting for controller acknowledgement…").font(.caption).foregroundStyle(.secondary) }
+            TabView {
+                HomeView().tabItem { Label("Home", systemImage: "house") }
+                DesignView().tabItem { Label("Design", systemImage: "lightbulb") }
+                ShowView().tabItem { Label("Show", systemImage: "play.rectangle") }
+                MusicView().tabItem { Label("Music", systemImage: "waveform") }
+            }
+            Button {
+                if let state = store.snapshot { store.send(type: "blackout.set", body: ["on": !state.blackout]) }
+            } label: {
+                Label(store.snapshot?.blackout == true ? "Release blackout" : "Blackout", systemImage: "xmark.octagon.fill").frame(maxWidth: .infinity).padding(.vertical, 10)
+            }.buttonStyle(.borderedProminent).tint(.red).disabled(!store.connected).padding(.horizontal)
+        }
+        .sheet(isPresented: $connectionSheet) { ConnectionView() }
+        .onAppear { if !store.connected { connectionSheet = true } }
+    }
+}
+struct ConnectionView: View {
+    @EnvironmentObject var store: ConnectionStore
+    @StateObject private var discovery = ControllerDiscovery()
+    @AppStorage("controllerAddress") private var address = ""
+    @State private var pin = ""
+    @State private var setupToken = ""
+    @Environment(\.dismiss) private var dismiss
+    var body: some View {
+        NavigationStack {
+            Form {
+                Section("Controller") {
+                    TextField("http://192.168.1.20:4173", text: $address).textInputAutocapitalization(.never).autocorrectionDisabled().keyboardType(.URL)
+                    Button("Check controller") { Task { await store.inspect(address: address) } }.disabled(store.busy)
+                    ForEach(discovery.controllers) { controller in
+                        Button(controller.name) { address = controller.address; Task { await store.inspect(address: address) } }
+                    }
+                    if let error = discovery.error { Text(error).font(.caption) }
+                }
+                Section(store.setupRequired ? "First connection" : "Sign in") {
+                    SecureField("Controller PIN", text: $pin).keyboardType(.numberPad)
+                    if store.setupRequired {
+                        SecureField("Setup token from controller console", text: $setupToken)
+                        Text("Choose a PIN and enter the setup token displayed on the controller.").font(.caption)
+                    }
+                    Button(store.setupRequired ? "Set up and connect" : "Sign in and connect") {
+                        Task { await store.signIn(address: address, pin: pin, setupToken: setupToken); pin = ""; setupToken = "" }
+                    }.disabled(store.busy || address.isEmpty || pin.isEmpty || (store.setupRequired && setupToken.isEmpty))
+                }
+                if let error = store.error { Section { Text(error).foregroundStyle(.red) } }
+                if store.connected { Section { Text("Connected as \(store.role)"); Button("Disconnect") { store.disconnect() } } }
+            }
+            .navigationTitle("Connection")
+            .toolbar { Button("Done") { dismiss() } }
+            .onChange(of: store.connected) { _, connected in if connected { dismiss() } }
+            .task { discovery.start() }
+            .onDisappear { discovery.stop() }
+        }
+    }
+}
+struct HomeView: View {
+    @EnvironmentObject var store: ConnectionStore
+    @State private var fade = 3
+    var body: some View {
+        NavigationStack {
+            List {
+                if let state = store.snapshot {
+                    Section("Grand master · \(Int(state.master * 100))%") {
+                        LevelControl(value: state.master) { store.send(type: "master.set", body: ["value": $0]) }.disabled(!store.canControl)
+                    }
+                    Section("Scenes") {
+                        Picker("Fade", selection: $fade) { Text("Instant").tag(0); Text("1 sec").tag(1); Text("3 sec").tag(3); Text("5 sec").tag(5) }
+                        ForEach(state.config.scenes) { scene in
+                            Button {
+                                store.send(type: "scene.activate", body: ["sceneId": scene.id, "fadeMs": fade * 1000, "groupIds": [], "takeover": false])
+                            } label: { HStack { Text(scene.name); Spacer(); if state.activeSceneId == scene.id { Image(systemName: "checkmark") } } }.disabled(!store.canControl)
+                        }
+                        if state.config.scenes.isEmpty { Text("No scenes configured.") }
+                    }
+                } else { Text("Connect to a controller to see its scenes.").foregroundStyle(.secondary) }
+            }.navigationTitle("Home")
+        }
+    }
+}
+// The slider is an edit draft; reported output changes only on authoritative snapshots.
+struct LevelControl: View {
+    let value: Double
+    let commit: (Double) -> Void
+    @State private var draft: Double = 0
+    @State private var editing = false
+    var body: some View {
+        Slider(value: $draft, in: 0...1, onEditingChanged: { active in
+            editing = active
+            if !active { commit(draft) }
+        })
+        .onAppear { draft = value }
+        .onChange(of: value) { _, newValue in if !editing { draft = newValue } }
+    }
+}
+struct DesignView: View {
+    @EnvironmentObject var store: ConnectionStore
+    @State private var name = ""
+    @State private var selectedGroup = ""
+    @State private var groupDimmer = 0.5
+    var body: some View {
+        NavigationStack {
+            List {
+                if let state = store.snapshot {
+                    Section("Groups") {
+                        let groups = Array(Set(state.config.fixtures.flatMap(\.groupIds))).sorted()
+                        if groups.isEmpty { Text("No groups configured.") }
+                        else {
+                            Picker("Group", selection: $selectedGroup) {
+                                Text("Choose group").tag("")
+                                ForEach(groups, id: \.self) { Text($0).tag($0) }
+                            }
+                            Slider(value: $groupDimmer, in: 0...1)
+                            Button("Apply group dimmer") { store.send(type: "group.set", body: ["groupId": selectedGroup, "values": ["dimmer": groupDimmer], "fadeMs": 0, "takeover": false]) }.disabled(!store.canControl || selectedGroup.isEmpty || !state.config.fixtures.filter { $0.enabled && $0.groupIds.contains(selectedGroup) }.allSatisfy { state.config.attributes(for: $0).contains("dimmer") })
+                        }
+                    }
+                    ForEach(state.config.fixtures) { fixture in
+                        Section("\(fixture.name) · address \(fixture.address)") {
+                            if !fixture.enabled { Text("Disabled in controller configuration") }
+                            ForEach(state.config.attributes(for: fixture), id: \.self) { attribute in
+                                VStack(alignment: .leading) {
+                                    Text("\(attribute.capitalized) · \(Int((state.fixtures[fixture.id]?[attribute] ?? 0) * 100))%")
+                                    LevelControl(value: state.fixtures[fixture.id]?[attribute] ?? 0) { value in
+                                        store.send(type: "fixture.set", body: ["fixtureId": fixture.id, "values": [attribute: value], "fadeMs": 0, "takeover": false])
+                                    }
+                                }.disabled(!store.canControl || !fixture.enabled)
+                            }
+                            Button("Identify") { store.send(type: "fixture.identify", body: ["fixtureId": fixture.id, "durationMs": 1000]) }.disabled(!store.canControl || !fixture.enabled)
+                        }
+                    }
+                    Section("Save current output") {
+                        TextField("Scene name", text: $name)
+                        Button("Save as scene") { store.send(type: "scene.save", body: ["sceneId": UUID().uuidString, "name": name.trimmingCharacters(in: .whitespacesAndNewlines), "clearOthers": true]) }.disabled(!store.canControl || name.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty || name.count > 80)
+                    }
+                } else { Text("Connect to see patched fixtures.") }
+            }.navigationTitle("Design")
+        }
+    }
+}
+struct ShowView: View {
+    @EnvironmentObject var store: ConnectionStore
+    var body: some View {
+        NavigationStack {
+            List {
+                if let state = store.snapshot {
+                    Section("Playback · \(state.show.phase)") {
+                        ForEach(Array(state.config.cues.enumerated()), id: \.element.id) { index, cue in
+                            HStack { Text(cue.name); Spacer(); if state.show.currentCueIndex == index { Image(systemName: "play.fill") }; Text("\(Double(cue.fadeMs) / 1000, specifier: "%.1f") sec").foregroundStyle(.secondary) }
+                        }
+                        if state.config.cues.isEmpty { Text("No cues configured.") }
+                    }
+                    Section {
+                        HStack {
+                            Button("Back") { store.send(type: "show.back") }
+                            Spacer()
+                            Button("GO") { store.send(type: "show.go") }.font(.title.bold())
+                            Spacer()
+                            Button("Stop") { store.send(type: "show.stop") }
+                        }.disabled(!store.canControl || state.config.cues.isEmpty)
+                    }
+                } else { Text("Connect to see the controller’s cues.") }
+            }.navigationTitle("Show")
+        }
+    }
+}
+struct MusicView: View {
+    @EnvironmentObject var store: ConnectionStore
+    var body: some View {
+        NavigationStack {
+            Form {
+                if let state = store.snapshot {
+                    LabeledContent("Status", value: state.music.running ? "Running" : "Stopped")
+                    LabeledContent("Source", value: state.music.source ?? "Unknown")
+                    if state.music.stale == true { Text("Audio input is stale.").foregroundStyle(.orange) }
+                    LabeledContent("Input level", value: "\(Int(state.music.rms * 100))%")
+                    ProgressView(value: state.music.rms)
+                    LabeledContent("Bass", value: "\(Int(state.music.bass * 100))%")
+                    Button(state.music.running ? "Stop music" : "Start music") { store.send(type: state.music.running ? "music.stop" : "music.start") }.disabled(!store.canControl)
+                } else { Text("Connect to see audio status.") }
+            }.navigationTitle("Music")
+        }
+    }
+}

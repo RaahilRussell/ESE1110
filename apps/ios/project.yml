@@ -3,14 +3,31 @@ options:
   bundleIdPrefix: com.raahil
   deploymentTarget:
     iOS: "17.0"
+schemes:
+  Flashify:
+    build:
+      targets:
+        Flashify: all
+    test:
+      targets:
+        - FlashifyTests
 targets:
   Flashify:
     type: application
     platform: iOS
     sources:
       - path: FlashifyApp.swift
+      - path: Sources
     info:
       path: Flashify/Info.plist
+      properties:
+        NSLocalNetworkUsageDescription: Flashify discovers and controls your local lighting controller.
+        NSBonjourServices:
+          - _flashify._tcp
+        NSAppTransportSecurity:
+          NSAllowsLocalNetworking: true
+          NSAllowsArbitraryLoads: true
+        UILaunchScreen: {}
     settings:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: com.raahil.flashify
@@ -18,3 +35,16 @@ targets:
         SWIFT_VERSION: "5.0"
         TARGETED_DEVICE_FAMILY: "1,2"
         GENERATE_INFOPLIST_FILE: NO
+  FlashifyTests:
+    type: bundle.unit-test
+    platform: iOS
+    sources:
+      - path: Tests
+        excludes:
+          - Support
+    dependencies:
+      - target: Flashify
+    settings:
+      base:
+        GENERATE_INFOPLIST_FILE: YES
+        SWIFT_VERSION: "5.0"

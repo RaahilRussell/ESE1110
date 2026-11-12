@@ -1,0 +1,40 @@
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import { mkdtemp } from 'node:fs/promises';
+import { join } from 'node:path';
+import { tmpdir } from 'node:os';
+import { Auth } from '../apps/server/auth.js';
+
+test('setup requires local token, sessions require credentials, lease is exclusive and expires', async () => {
+  let now = 1000;
+  const auth = new Auth(await mkdtemp(join(tmpdir(), 'flashify-auth-')), () => now, 60000, 10000);
+  await auth.init();
+  assert.equal(auth.setupRequired, true);
+  await assert.rejects(() => auth.bootstrap('314159', 'wrong'));
+  const first = await auth.bootstrap('314159', auth.bootstrapToken);
+  assert.equal(auth.setupRequired, false);
+  await assert.rejects(() => auth.bootstrap('271828', auth.bootstrapToken));
+  assert.throws(() => auth.authenticate());
+  await assert.rejects(() => auth.login('000000'));
+  const second = await auth.login('314159');
+  auth.acquire(first.sessionId);
+  assert.throws(() => auth.acquire(second.sessionId));
+  assert.throws(() => auth.operator(second.sessionId));
+  now += 10001;
+  auth.acquire(second.sessionId);
+  assert.equal(auth.role(second.sessionId), 'operator');
+  auth.revoke(second.token);
+  assert.throws(() => auth.authenticate(second.token));
+  assert.equal(auth.lease, undefined);
+  now += 60001;
+  assert.throws(() => auth.authenticate(first.token));
+});
+test('authentication attempt limit blocks even correct credentials during lockout', async () => {
+  let now = 0;
+  const auth = new Auth(await mkdtemp(join(tmpdir(), 'flashify-lockout-')), () => now);
+  await auth.init();
+  for (let i = 0; i < 5; i++) auth.rateLimit('client');
+  assert.throws(() => auth.rateLimit('client'));
+  now = 60001;
+  assert.doesNotThrow(() => auth.rateLimit('client'));
+});
