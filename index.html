@@ -1,0 +1,71 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="theme-color" content="#171817" />
+    <title>Flashify — local lighting control</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <div class="app-shell">
+      <aside class="sidebar" aria-label="Primary navigation">
+        <div class="brand"><span class="brand-mark" aria-hidden="true"></span><span>flashify</span></div>
+        <div class="venue"><span class="eyebrow">active space</span><strong>Detkin Lab</strong><span class="venue-sub">Black box · 1 universe</span></div>
+        <nav class="nav-list">
+          <button class="nav-item is-active" data-view="home"><span class="nav-icon">◈</span>Home</button>
+          <button class="nav-item" data-view="show"><span class="nav-icon">▶</span>Show run</button>
+          <button class="nav-item" data-view="setup"><span class="nav-icon">⌘</span>Setup</button>
+          <button class="nav-item" data-view="diagnostics"><span class="nav-icon">⌁</span>Diagnostics</button>
+        </nav>
+        <div class="sidebar-footer"><span class="connection-dot"></span><div><strong>Controller online</strong><small>Flashify P0 · 10.0.0.42</small></div></div>
+      </aside>
+
+      <main class="main-content">
+        <header class="topbar">
+          <div class="crumb"><span>Control room</span><span class="slash">/</span><strong id="page-title">Home</strong></div>
+          <div class="top-actions"><span class="sync-label"><span class="connection-dot"></span>Synced just now</span><button class="avatar" aria-label="Account menu">RR</button></div>
+        </header>
+
+        <section class="view is-visible" id="home-view">
+          <div class="page-intro"><div><p class="kicker">Monday, November 11 · 19:42</p><h1>Good evening, Raahil.</h1><p class="lede">The room is ready. Choose a look or take the house lights in hand.</p></div><div class="safe-badge"><span class="pulse"></span><span><strong>Safe output</strong><small>DMX refresh 33 Hz</small></span></div></div>
+
+          <div class="hero-grid">
+            <section class="control-card master-card">
+              <div class="card-heading"><div><span class="eyebrow">room level</span><h2>Grand master</h2></div><span class="mono-value" id="master-value">82%</span></div>
+              <div class="master-dial"><div class="dial-track"><div class="dial-fill" id="dial-fill"></div><div class="dial-knob" id="dial-knob"></div></div><div class="dial-center"><strong id="master-center">82</strong><span>percent</span></div></div>
+              <input class="range master-range" id="master-range" type="range" min="0" max="100" value="82" aria-label="Grand master" />
+              <div class="range-labels"><span>dark</span><span>full</span></div>
+              <div class="master-foot"><span>Active look</span><strong id="active-scene">House</strong><span class="fade-chip" id="active-fade">3 sec fade</span></div>
+            </section>
+            <section class="control-card blackout-card">
+              <div class="card-heading"><div><span class="eyebrow">safety control</span><h2>Blackout</h2></div><span class="status-tag" id="blackout-status">Ready</span></div>
+              <div class="blackout-body"><div class="blackout-symbol" aria-hidden="true">×</div><p>Instantly bring every intensity channel to its safe value. Your current look will be held and restored when released.</p></div>
+              <button class="blackout-button" id="blackout-button"><span class="button-lamp"></span><span id="blackout-label">Activate blackout</span><span>⌘</span></button>
+              <small class="card-note">Software blackout is not an emergency stop. Use the physical isolation path for safety.</small>
+            </section>
+          </div>
+
+          <div class="section-header"><div><span class="eyebrow">quick looks</span><h2>Scenes</h2></div><button class="text-button" data-view="setup">Manage scenes <span>→</span></button></div>
+          <div class="scene-grid" id="scene-grid"></div>
+
+          <div class="lower-grid">
+            <section class="panel groups-panel"><div class="section-header compact"><div><span class="eyebrow">direct control</span><h2>Groups</h2></div><button class="icon-button" aria-label="Add group">+</button></div><div id="groups-list"></div></section>
+            <section class="panel activity-panel"><div class="section-header compact"><div><span class="eyebrow">controller log</span><h2>Recent activity</h2></div><button class="text-button" data-view="diagnostics">View all</button></div><div class="activity-list" id="activity-list"></div></section>
+          </div>
+        </section>
+
+        <section class="view" id="show-view"><div class="page-intro"><div><p class="kicker">cue playback</p><h1>Run the room.</h1><p class="lede">Move through the Evening Workshop show. The controller keeps time if you leave.</p></div><div class="show-live"><span class="pulse"></span>Show stopped</div></div><div class="show-layout"><section class="panel cue-panel"><div class="cue-meta"><span class="eyebrow">Evening Workshop</span><span class="mono-value">4 cues</span></div><div class="cue-list" id="cue-list"></div></section><section class="panel transport-panel"><span class="eyebrow">transport</span><div class="current-cue"><span>current cue</span><strong id="current-cue-name">House</strong><small id="current-cue-detail">Cue 1 · 3 sec fade</small></div><div class="transport-buttons"><button class="transport secondary" id="back-button">←<small>Back</small></button><button class="transport go" id="go-button">GO<small>Next cue</small></button><button class="transport secondary" id="stop-button">■<small>Stop</small></button></div><div class="show-progress"><div class="progress-label"><span>show progress</span><strong id="show-progress-label">1 / 4</strong></div><div class="progress-track"><div id="show-progress-bar"></div></div></div></section></div></section>
+
+        <section class="view" id="setup-view"><div class="page-intro"><div><p class="kicker">administrator access</p><h1>Make the patch yours.</h1><p class="lede">Configure the known Detkin fixtures, validate the line, and save a recoverable installation.</p></div><button class="primary-button" id="export-button">Export patch sheet <span>↓</span></button></div><div class="setup-layout"><section class="panel fixture-panel"><div class="section-header compact"><div><span class="eyebrow">patched fixtures</span><h2>DMX line</h2></div><span class="count-badge">3 / 16</span></div><div class="fixture-table" id="fixture-table"></div><div class="add-fixture"><button class="text-button" id="add-fixture">+ Add fixture</button><span>Only verified profiles are available in P0.</span></div></section><section class="panel validation-panel"><span class="eyebrow">configuration health</span><h2>Ready to commit</h2><div class="health-ring"><strong>100</strong><span>valid</span></div><div class="health-checks"><div><span>✓</span>Address ranges are clear</div><div><span>✓</span>All profiles are verified</div><div><span>✓</span>Safe values are defined</div></div><button class="primary-button full" id="save-config">Save configuration</button><small class="card-note">Changes are staged in memory until validation passes. The last known-good configuration remains recoverable.</small></section></div></section>
+
+        <section class="view" id="diagnostics-view"><div class="page-intro"><div><p class="kicker">system health</p><h1>Everything in tune.</h1><p class="lede">A bounded view of the controller, its output driver, and the local network.</p></div><div class="safe-badge"><span class="pulse"></span><span><strong>No active faults</strong><small>Uptime 02:14:08</small></span></div></div><div class="metrics-grid"><div class="metric-card"><span class="eyebrow">firmware</span><strong>0.4.0-p0</strong><small>Protocol v1 compatible</small></div><div class="metric-card"><span class="eyebrow">output driver</span><strong>DMX512</strong><small>Universe 1 · 33 Hz</small></div><div class="metric-card"><span class="eyebrow">wifi signal</span><strong>-48 dBm</strong><small>Detkin-IoT · 2.4 GHz</small></div><div class="metric-card"><span class="eyebrow">heap free</span><strong>184 KB</strong><small>Stable since boot</small></div></div><section class="panel log-panel"><div class="section-header compact"><div><span class="eyebrow">bounded event log</span><h2>Controller events</h2></div><span class="status-tag">Read only</span></div><div class="event-log" id="event-log"></div></section></section>
+      </main>
+    </div>
+    <div class="toast" id="toast" role="status" aria-live="polite"></div>
+    <script src="app.js"></script>
+  </body>
+</html>
