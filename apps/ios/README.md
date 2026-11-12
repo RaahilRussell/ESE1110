@@ -1,6 +1,6 @@
 # Flashify iOS client
 
-`FlashifyApp.swift` is the iOS 17 SwiftUI client for the same local server and protocol used by the web dashboard. Add the file to a new iOS App target in Xcode, set the deployment target to iOS 17, and add these Info.plist keys:
+`Flashify.xcodeproj` is the iOS 17 SwiftUI client for the same local server and protocol used by the web dashboard. Open the project in Xcode and run the `Flashify` scheme. The deployment target, bundle identifier, and local-network permissions are already configured.
 
 - `NSLocalNetworkUsageDescription`: Flashify finds the local lighting controller.
 - `NSBonjourServices`: `_flashify._tcp`.

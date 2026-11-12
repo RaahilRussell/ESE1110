@@ -1,0 +1,20 @@
+name: Flashify
+options:
+  bundleIdPrefix: com.raahil
+  deploymentTarget:
+    iOS: "17.0"
+targets:
+  Flashify:
+    type: application
+    platform: iOS
+    sources:
+      - path: FlashifyApp.swift
+    info:
+      path: Flashify/Info.plist
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.raahil.flashify
+        PRODUCT_NAME: Flashify
+        SWIFT_VERSION: "5.0"
+        TARGETED_DEVICE_FAMILY: "1,2"
+        GENERATE_INFOPLIST_FILE: NO
